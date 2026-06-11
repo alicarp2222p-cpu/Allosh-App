@@ -1,0 +1,188 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جميع الفواتير - VAG Shop</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f0f2f5; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { background: white; padding: 15px 25px; border-radius: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .logo { height: 55px; width: 55px; object-fit: cover; border-radius: 50%; border: 2px solid #e63946; }
+        .logo-area { display: flex; align-items: center; gap: 15px; }
+        .btn-back, .btn-print-all { padding: 8px 16px; border-radius: 25px; border: none; cursor: pointer; font-weight: 500; text-decoration: none; display: inline-block; margin: 0 5px; }
+        .btn-print-all { background: #27ae60; color: white; }
+        .btn-back { background: #2c3e66; color: white; }
+        .glass-toggle { background: #6c5ce7; color: white; border: none; padding: 8px 16px; border-radius: 25px; cursor: pointer; }
+        .invoices-grid { display: flex; flex-direction: column; gap: 25px; }
+        .invoice-card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #eef2f7; position: relative; }
+        .invoice-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #eef2f7; }
+        .invoice-title { font-size: 18px; font-weight: bold; color: #2c3e66; }
+        .invoice-date-time { font-size: 13px; color: #888; }
+        .btn-print-invoice { background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; }
+        .table-wrapper { overflow-x: auto; margin: 15px 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #2c3e66; color: white; padding: 8px 6px; text-align: center; border: 1px solid #1a2a4a; }
+        td { padding: 6px 4px; text-align: center; border: 1px solid #ddd; }
+        .product-img-small { width: 35px; height: 35px; object-fit: cover; border-radius: 6px; }
+        .invoice-totals { display: flex; justify-content: flex-end; gap: 20px; flex-wrap: wrap; margin: 15px 0; padding-top: 10px; border-top: 1px solid #eef2f7; }
+        .total-badge { background: #f8f9fa; border-radius: 12px; padding: 6px 15px; text-align: center; min-width: 100px; border: 1px solid #e0e0e0; }
+        .total-badge h5 { font-size: 11px; color: #888; margin-bottom: 3px; }
+        .total-badge .value { font-size: 16px; font-weight: bold; }
+        .total-badge.total .value { color: #2c3e66; }
+        .total-badge.paid .value { color: #27ae60; }
+        .total-badge.remaining .value { color: #e63946; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; padding: 5px; margin: 0; }
+            .container { max-width: 100%; padding: 0; margin: 0; }
+            .invoices-grid { display: flex; flex-direction: column; gap: 12px; }
+            .invoice-card { border: 1px solid #000; padding: 6px; page-break-inside: avoid; }
+            .invoice-header { border-bottom: 1px solid #000; margin-bottom: 5px; }
+            .btn-print-invoice { display: none; }
+            table { font-size: 8px; }
+            th, td { padding: 3px 2px; }
+            .product-img-small { width: 20px !important; height: 20px !important; }
+            .invoice-totals { gap: 8px; margin: 5px 0; }
+            .total-badge { padding: 2px 6px; min-width: 60px; }
+            .total-badge h5 { font-size: 7px; }
+            .total-badge .value { font-size: 10px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header no-print">
+        <div class="logo-area"><img src="/1000117025.png" alt="Logo" class="logo"><h2>📋 جميع الفواتير</h2></div>
+        <div><button class="btn-print-all" onclick="window.print()">🖨️ طباعة الكل</button><a href="/customers.html" class="btn-back">🔙 العملاء</a><button class="glass-toggle" onclick="toggleGlassMode()">✨ وضع زجاجي</button></div>
+    </div>
+    <div id="invoicesContainer" class="invoices-grid"><div style="text-align:center;padding:50px;">جاري التحميل...</div></div>
+</div>
+<script>
+    function toggleGlassMode() { document.body.classList.toggle('glass-mode'); localStorage.setItem('glassMode', document.body.classList.contains('glass-mode')); }
+    if (localStorage.getItem('glassMode') === 'true') document.body.classList.add('glass-mode');
+    function formatNumber(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
+
+    function printInvoice(saleId) {
+        const card = document.querySelector(`.invoice-card[data-id='${saleId}']`);
+        if (!card) return;
+        const clone = card.cloneNode(true);
+        clone.querySelectorAll('.btn-print-invoice').forEach(b => b.remove());
+        const win = window.open('', '_blank');
+        win.document.write(`
+            <!DOCTYPE html>
+            <html dir="rtl">
+            <head><meta charset="UTF-8"><title>فاتورة #${saleId}</title>
+            <style>
+                body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; direction: rtl; background: white; }
+                table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+                th, td { border: 1px solid #000; padding: 8px; text-align: center; }
+                th { background: #f2f2f2; }
+                .product-img-small { width: 40px; height: 40px; object-fit: cover; }
+                .invoice-totals { display: flex; justify-content: flex-end; gap: 15px; margin-top: 15px; }
+                .total-badge { border: 1px solid #000; padding: 6px 12px; text-align: center; }
+                .footer { text-align: center; margin-top: 20px; font-size: 12px; }
+            </style>
+            </head>
+            <body>${clone.outerHTML}<div class="footer">تم الطباعة: ${new Date().toLocaleString()}</div>
+            <script>window.onload=()=>{window.print()};<\/script>
+            </body>
+            </html>
+        `);
+        win.document.close();
+    }
+
+    async function loadAllInvoices() {
+        try {
+            const res = await fetch('/api/all-sales-invoices');
+            const data = await res.json();
+            if (!data.length) { document.getElementById('invoicesContainer').innerHTML = '<div style="padding:30px;text-align:center;">📭 لا توجد فواتير</div>'; return; }
+            
+            // تجميع حسب sale_id
+            const invoicesMap = new Map();
+            for (let item of data) {
+                const sid = item.sale_id;
+                if (!invoicesMap.has(sid)) {
+                    invoicesMap.set(sid, {
+                        sale_id: sid,
+                        sale_date: item.sale_date,
+                        customer_name: item.customer_name,
+                        total_amount: formatNumber(item.total_amount),
+                        paid_amount: formatNumber(item.paid_amount),
+                        remaining_amount: formatNumber(item.remaining_amount),
+                        items: []
+                    });
+                }
+                if (item.product_id) {
+                    invoicesMap.get(sid).items.push({
+                        name: item.product_name,
+                        part: item.part_number,
+                        qty: formatNumber(item.quantity),
+                        price: formatNumber(item.price_at_sale),
+                        image: item.image_url
+                    });
+                }
+            }
+
+            let html = '';
+            for (let inv of invoicesMap.values()) {
+                const date = inv.sale_date ? new Date(inv.sale_date).toLocaleDateString() : 'غير محدد';
+                const time = inv.sale_date ? new Date(inv.sale_date).toLocaleTimeString() : '';
+                let totalItems = 0;
+                let tblRows = '';
+                for (let item of inv.items) {
+                    const tot = item.qty * item.price;
+                    totalItems += tot;
+                    const img = item.image || 'https://via.placeholder.com/35x35?text=No+Image';
+                    tblRows += `<tr>
+                        <td>${item.name || 'غير معروف'}${item.name || 'غير معروف'}${item.name || 'غير معروف'}${item.name || 'غير معروف'}${item.name || 'غير معروف'}${item.name || 'غير معروف'}${item.name || 'غير معروف'}${item.name || 'غير معروف'}${item.name || 'غير معروف'}${item.name || 'غير معروف'}${item.name || 'غير معروف'}
+                        <td>${item.part || '---'}${item.part || '---'}${item.part || '---'}${item.part || '---'}${item.part || '---'}${item.part || '---'}${item.part || '---'}${item.part || '---'}${item.part || '---'}${item.part || '---'}${item.part || '---'}
+                        <td>${item.qty}${item.qty}${item.qty}${item.qty}${item.qty}${item.qty}${item.qty}${item.qty}${item.qty}${item.qty}${item.qty}
+                        <td>₪${item.price.toFixed(2)}${item.price.toFixed(2)}${item.price.toFixed(2)}${item.price.toFixed(2)}${item.price.toFixed(2)}${item.price.toFixed(2)}${item.price.toFixed(2)}${item.price.toFixed(2)}${item.price.toFixed(2)}${item.price.toFixed(2)}${item.price.toFixed(2)}
+                        <td>₪${tot.toFixed(2)}${tot.toFixed(2)}${tot.toFixed(2)}${tot.toFixed(2)}${tot.toFixed(2)}${tot.toFixed(2)}${tot.toFixed(2)}${tot.toFixed(2)}${tot.toFixed(2)}${tot.toFixed(2)}${tot.toFixed(2)}
+                        <td><img class="product-img-small" src="${img}"><img class="product-img-small" src="${img}"><img class="product-img-small" src="${img}"><img class="product-img-small" src="${img}"><img class="product-img-small" src="${img}"><img class="product-img-small" src="${img}"><img class="product-img-small" src="${img}"><img class="product-img-small" src="${img}"><img class="product-img-small" src="${img}"><img class="product-img-small" src="${img}"><img class="product-img-small" src="${img}">
+                    `;
+                }
+                const paid = inv.paid_amount;
+                const rem = inv.remaining_amount;
+                html += `
+                    <div class="invoice-card" data-id="${inv.sale_id}">
+                        <div class="invoice-header">
+                            <div class="invoice-title">🧾 فاتورة #${inv.sale_id} - ${inv.customer_name}</div>
+                            <div class="invoice-date-time">📅 ${date} 🕒 ${time}</div>
+                            <button class="btn-print-invoice no-print" onclick="printInvoice(${inv.sale_id})">🖨️ طباعة هذه الفاتورة</button>
+                        </div>
+                        <div class="table-wrapper">
+                            <table><thead>运转<th>المنتج</th><th>رقم القطعة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th><th>الصورة</th></tr></thead>
+                            <tbody>${tblRows}</tbody>
+                            </table>
+                        </div>
+                        <div class="invoice-totals">
+                            <div class="total-badge total"><h5>💰 الإجمالي</h5><div class="value">₪${inv.total_amount.toFixed(2)}</div></div>
+                            <div class="total-badge paid"><h5>💵 المدفوع</h5><div class="value">₪${paid.toFixed(2)}</div></div>
+                            <div class="total-badge remaining"><h5>📉 المتبقي</h5><div class="value">₪${rem.toFixed(2)}</div></div>
+                        </div>
+                    </div>
+                `;
+            }
+            document.getElementById('invoicesContainer').innerHTML = html;
+        } catch (err) {
+            document.getElementById('invoicesContainer').innerHTML = `<div style="color:red;padding:20px;">❌ خطأ: ${err.message}</div>`;
+        }
+    }
+    loadAllInvoices();
+</script>
+<style>
+    body.glass-mode { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; }
+    body.glass-mode .header, body.glass-mode .invoice-card { background: rgba(255,255,255,0.2) !important; backdrop-filter: blur(12px); color: white; }
+    body.glass-mode th { background: rgba(0,0,0,0.5); }
+    body.glass-mode td { background: rgba(255,255,255,0.1); color: white; }
+    body.glass-mode .btn-back, body.glass-mode .btn-print-all, body.glass-mode .glass-toggle, body.glass-mode .btn-print-invoice { background: rgba(0,0,0,0.5); color: white; }
+    body.glass-mode .total-badge { background: rgba(255,255,255,0.15); }
+    body.glass-mode .total-badge h5 { color: #ffdd99; }
+    body.glass-mode .total-badge .value { color: white; }
+</style>
+</body>
+</html>

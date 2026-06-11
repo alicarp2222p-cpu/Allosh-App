@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جميع الشيكات المستلمة - VAG Shop</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f0f2f5; padding: 20px; }
+        .container { max-width: 1200px; margin: auto; background: white; border-radius: 24px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e66; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background: #2c3e66; color: white; }
+        .cashed { background: #d4edda; }
+        .pending { background: #fff3cd; }
+        button { padding: 6px 12px; border-radius: 8px; border: none; cursor: pointer; margin: 0 4px; }
+        .btn-cash { background: #28a745; color: white; }
+        .btn-delete { background: #dc3545; color: white; }
+        .btn-back { background: #6c757d; color: white; text-decoration: none; padding: 8px 16px; border-radius: 30px; display: inline-block; margin-top: 20px; }
+        .filter { margin-bottom: 20px; }
+        .filter input { padding: 8px; border-radius: 8px; border: 1px solid #ccc; width: 200px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📋 جميع الشيكات المستلمة</h1>
+    <div class="filter">
+        <input type="text" id="searchInput" placeholder="🔍 بحث برقم الفاتورة أو القيمة...">
+    </div>
+    <table id="checksTable">
+        <thead>
+            <tr>
+                <th>رقم الفاتورة</th>
+                <th>القيمة (₪)</th>
+                <th>تاريخ الاستحقاق</th>
+                <th>الحالة</th>
+                <th>الإجراءات</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <a href="/" class="btn-back">🔙 العودة للرئيسية</a>
+</div>
+<script>
+    const CHECKS_KEY = "vag_shop_checks";
+    const EXTRA_PAYMENTS_KEY = "vag_extra_payments";
+    
+    function loadChecks(filter = '') {
+        const checks = JSON.parse(localStorage.getItem(CHECKS_KEY) || '{}');
+        const tbody = document.querySelector('#checksTable tbody');
+        tbody.innerHTML = '';
+        let filteredEntries = Object.entries(checks);
+        if (filter) {
+            filteredEntries = filteredEntries.filter(([saleId, check]) => 
+                saleId.includes(filter) || check.amount.toString().includes(filter)
+            );
+        }
+        for (const [saleId, check] of filteredEntries) {
+            const row = tbody.insertRow();
+            row.className = check.isCashed ? 'cashed' : 'pending';
+            row.insertCell(0).innerText = saleId;
+            row.insertCell(1).innerText = check.amount.toFixed(2);
+            row.insertCell(2).innerText = check.dueDate ? new Date(check.dueDate).toLocaleDateString('ar-EG') : 'غير محدد';
+            row.insertCell(3).innerText = check.isCashed ? '✅ تم صرفه' : '⏳ لم يُصرف';
+            const actions = row.insertCell(4);
+            if (!check.isCashed) {
+                const cashBtn = document.createElement('button');
+                cashBtn.innerText = 'صرف الآن';
+                cashBtn.className = 'btn-cash';
+                cashBtn.onclick = () => cashCheck(saleId, check.amount);
+                actions.appendChild(cashBtn);
+            }
+            const delBtn = document.createElement('button');
+            delBtn.innerText = 'حذف';
+            delBtn.className = 'btn-delete';
+            delBtn.onclick = () => deleteCheck(saleId);
+            actions.appendChild(delBtn);
+        }
+        if (filteredEntries.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5">لا توجد شيكات مطابقة</td></tr>';
+        }
+    }
+    
+    function cashCheck(saleId, amount) {
+        // نحتاج لفتح صفحة العميل المرتبطة بهذه الفاتورة
+        // يمكننا تخزين customer_id لكل فاتورة في localStorage إضافي، لكن بدلاً من ذلك نطلب من المستخدم الذهاب يدوياً
+        alert(`لصرف الشيك، انتقل إلى صفحة العميل المرتبطة بالفاتورة رقم ${saleId} ثم استخدم زر "صرف الشيك الآن" في قسم الشيكات المستحقة.`);
+        // يمكن تحسينها بفتح نافذة منبثقة تطلب إدخال معرف العميل
+    }
+    
+    function deleteCheck(saleId) {
+        if (confirm('هل تريد حذف هذا الشيك نهائياً؟')) {
+            const checks = JSON.parse(localStorage.getItem(CHECKS_KEY) || '{}');
+            delete checks[saleId];
+            localStorage.setItem(CHECKS_KEY, JSON.stringify(checks));
+            loadChecks(document.getElementById('searchInput').value);
+        }
+    }
+    
+    document.getElementById('searchInput').addEventListener('input', (e) => loadChecks(e.target.value));
+    loadChecks();
+</script>
+</body>
+</html>

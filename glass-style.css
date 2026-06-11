@@ -1,0 +1,123 @@
+
+/* glass-style.css - التصميم الزجاجي المشترك لجميع الصفحات */
+
+/* الوضع الزجاجي - Glass Mode */
+body.glass-mode {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+body.glass-mode .header,
+body.glass-mode .nav-bar,
+body.glass-mode .stat-card,
+body.glass-mode .product-card,
+body.glass-mode .customer-card,
+body.glass-mode .sale-form,
+body.glass-mode .modal-content,
+body.glass-mode table,
+body.glass-mode .tabs-header,
+body.glass-mode .tabs,
+body.glass-mode .tab-btn,
+body.glass-mode .btn-add,
+body.glass-mode .btn-deleted,
+body.glass-mode .add-product-btn,
+body.glass-mode .btn-print-sales,
+body.glass-mode .btn-save,
+body.glass-mode .btn-cancel,
+body.glass-mode .product-row button {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+    color: white !important;
+}
+
+body.glass-mode .product-name,
+body.glass-mode .product-price,
+body.glass-mode .product-engine,
+body.glass-mode .product-quantity,
+body.glass-mode .stat-info h3,
+body.glass-mode .stat-info p,
+body.glass-mode .customer-info h3,
+body.glass-mode .customer-info div,
+body.glass-mode .sale-form h3,
+body.glass-mode .sale-form select,
+body.glass-mode .sale-form input,
+body.glass-mode .product-row select,
+body.glass-mode .product-row input,
+body.glass-mode #saleTotal,
+body.glass-mode .modal-content h3,
+body.glass-mode .modal-content input,
+body.glass-mode th,
+body.glass-mode td,
+body.glass-mode .header h1,
+body.glass-mode .header h2,
+body.glass-mode .nav-bar a {
+    color: white !important;
+}
+
+body.glass-mode .product-status {
+    background: rgba(0, 0, 0, 0.4) !important;
+    color: white !important;
+}
+
+body.glass-mode .btn-add:hover,
+body.glass-mode .btn-deleted:hover,
+body.glass-mode .tab-btn:hover,
+body.glass-mode .btn-print-sales:hover {
+    background: rgba(0, 0, 0, 0.5) !important;
+    transform: scale(1.02) !important;
+}
+
+body.glass-mode .tab-btn.active {
+    background: rgba(255, 255, 255, 0.4) !important;
+    color: white !important;
+}
+
+body.glass-mode th {
+    background: rgba(0, 0, 0, 0.3) !important;
+}
+
+body.glass-mode td {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+body.glass-mode .product-card:hover,
+body.glass-mode .customer-card:hover,
+body.glass-mode .stat-card:hover {
+    transform: translateY(-5px) !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+}
+
+body.glass-mode .modal {
+    background: rgba(0, 0, 0, 0.6) !important;
+}
+
+body.glass-mode .glass-toggle {
+    background: rgba(255, 255, 255, 0.3) !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+}
+
+body.glass-mode .glass-toggle:hover {
+    background: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* زر التبديل */
+.glass-toggle {
+    background: #2c3e66;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 10px;
+    transition: 0.3s;
+}
+
+.glass-toggle:hover {
+    background: #e63946;
+    transform: scale(1.05);
+}

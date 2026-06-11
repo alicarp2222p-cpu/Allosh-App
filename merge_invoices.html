@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دمج فواتير العملاء - VAG Shop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: auto;
+            background: white;
+            border-radius: 28px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e66;
+            border-right: 6px solid #e63946;
+            padding-right: 15px;
+            margin-bottom: 25px;
+        }
+
+        .customers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            padding: 15px;
+        }
+
+        .customer-check {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .customer-check input {
+            width: 20px;
+            height: 20px;
+            margin: 0;
+        }
+
+        .customer-check label {
+            font-size: 16px;
+            font-weight: 500;
+            color: #2c3e66;
+        }
+
+        .btn-merge {
+            background: #8e44ad;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: 0.3s;
+        }
+
+        .btn-merge:hover {
+            background: #6c3483;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 16px;
+            color: #555;
+            text-align: center;
+        }
+
+        .report-area {
+            margin-top: 30px;
+            padding: 20px;
+            background: #fef9e7;
+            border-radius: 24px;
+            border: 1px solid #f1c40f;
+            display: none;
+        }
+
+        .report-area.show {
+            display: block;
+        }
+
+        .print-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #2c3e66;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 13px;
+        }
+
+        th {
+            background: #2c3e66;
+            color: white;
+            padding: 8px;
+            text-align: center;
+        }
+
+        td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: center;
+            vertical-align: top;
+        }
+
+        .items-cell {
+            text-align: right;
+            font-size: 12px;
+        }
+
+        .summary-cards {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .sum-card {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 10px 20px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .sum-card .value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 0;
+                max-width: 100%;
+            }
+            .customers-list,
+            .btn-merge,
+            .status,
+            .print-btn,
+            .back-link,
+            hr,
+            h1,
+            .container > p {
+                display: none !important;
+            }
+            .report-area {
+                display: block !important;
+                background: white;
+                border: none;
+                padding: 0;
+                margin: 0;
+            }
+            table {
+                font-size: 10px;
+                border: 1px solid #000;
+            }
+            th, td {
+                border: 1px solid #000;
+                padding: 4px;
+            }
+            .summary-cards {
+                justify-content: center;
+            }
+            .sum-card {
+                border: 1px solid #aaa;
+                background: #f9f9f9;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔗 دمج فواتير عدة عملاء</h1>
+    <p class="no-print">اختر العملاء ثم اضغط على عرض الفواتير (ستظهر النتيجة أسفل القائمة)</p>
+
+    <div id="customersChecklist" class="customers-list no-print">جاري تحميل العملاء...</div>
+    <button id="mergeBtn" class="btn-merge no-print">✅ عرض الفواتير المدمجة</button>
+    <div class="status no-print" id="statusMsg"></div>
+
+    <div id="reportArea" class="report-area">
+        <div class="no-print" style="text-align: left;">
+            <button class="print-btn" onclick="window.print()">🖨️ طباعة التقرير</button>
+        </div>
+        <div id="reportContent"></div>
+    </div>
+
+    <hr class="no-print">
+    <a href="/customers.html" class="back-link no-print">← العودة إلى العملاء</a>
+</div>
+
+<script>
+    // مفاتيح التخزين (نفس النظام الأصلي)
+    const EXTRA_PAYMENTS_KEY = "vag_extra_payments";
+    const CREDIT_BALANCE_KEY = "vag_customer_credit";
+    function getExtraPayments() { return JSON.parse(localStorage.getItem(EXTRA_PAYMENTS_KEY) || '{}'); }
+    function getCustomerCredit(customerId) { 
+        const map = JSON.parse(localStorage.getItem(CREDIT_BALANCE_KEY) || '{}'); 
+        return map[customerId] || 0; 
+    }
+
+    let allCustomers = [];
+
+    async function loadCustomers() {
+        try {
+            const res = await fetch('/api/customers');
+            if (!res.ok) throw new Error('فشل تحميل العملاء');
+            allCustomers = await res.json();
+            const container = document.getElementById('customersChecklist');
+            if (!allCustomers.length) {
+                container.innerHTML = '<div>لا يوجد عملاء</div>';
+                return;
+            }
+            container.innerHTML = allCustomers.map(c => `
+                <div class="customer-check">
+                    <input type="checkbox" value="${c.id}" id="cust_${c.id}">
+                    <label for="cust_${c.id}">${c.name} (📞 ${c.phone || 'لا يوجد'}) - رصيد دائن: ${getCustomerCredit(c.id).toFixed(2)} ₪</label>
+                </div>
+            `).join('');
+        } catch (err) {
+            document.getElementById('customersChecklist').innerHTML = `<div style="color:red;">❌ خطأ: ${err.message}</div>`;
+        }
+    }
+
+    async function fetchCustomerInvoices(customerId) {
+        const res = await fetch(`/api/sales/customer/${customerId}`);
+        if (!res.ok) throw new Error(`فشل جلب فواتير العميل`);
+        const sales = await res.json();
+        const invoicesMap = new Map();
+        for (let item of sales) {
+            const sid = item.sale_id;
+            if (!invoicesMap.has(sid)) {
+                invoicesMap.set(sid, {
+                    sale_id: sid,
+                    sale_date: item.sale_date,
+                    customer_name: item.customer_name,  // اسم العميل من API
+                    customer_id: customerId,
+                    total_amount: 0,
+                    paid_original: parseFloat(item.paid_amount) || 0,
+                    items: []
+                });
+            }
+            const inv = invoicesMap.get(sid);
+            const qty = parseFloat(item.quantity) || 0;
+            const price = parseFloat(item.price_at_sale) || 0;
+            inv.total_amount += qty * price;
+            inv.items.push({
+                name: item.product_name,
+                part: item.part_number,
+                qty: qty,
+                price: price,
+                image: item.image_url
+            });
+        }
+        return Array.from(invoicesMap.values());
+    }
+
+    async function generateMergedReport() {
+        const checkboxes = document.querySelectorAll('#customersChecklist input[type="checkbox"]:checked');
+        const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+        if (selectedIds.length === 0) {
+            alert('⚠️ يرجى اختيار عميل واحد على الأقل');
+            return;
+        }
+        const statusDiv = document.getElementById('statusMsg');
+        const reportArea = document.getElementById('reportArea');
+        const reportContent = document.getElementById('reportContent');
+
+        statusDiv.innerHTML = '⏳ جاري تحميل الفواتير...';
+        reportArea.classList.remove('show');
+
+        let allInvoices = [];
+        const extra = getExtraPayments();
+        let totalCreditBalance = 0; // مجموع الرصيد الدائن للعملاء المختارين
+
+        try {
+            // حساب الرصيد الدائن أولاً
+            for (let cid of selectedIds) {
+                totalCreditBalance += getCustomerCredit(cid);
+            }
+
+            for (let cid of selectedIds) {
+                const invoices = await fetchCustomerInvoices(cid);
+                for (let inv of invoices) {
+                    const extraPaid = extra[inv.sale_id] || 0;
+                    const totalPaid = inv.paid_original + extraPaid;
+                    const remaining = inv.total_amount - totalPaid;
+                    allInvoices.push({
+                        ...inv,
+                        totalPaid: totalPaid,
+                        remaining: remaining,
+                        saleDateObj: inv.sale_date ? new Date(inv.sale_date) : new Date(0)
+                    });
+                }
+            }
+            if (allInvoices.length === 0) {
+                statusDiv.innerHTML = '⚠️ لا توجد فواتير للعملاء المختارين.';
+                return;
+            }
+            // ترتيب زمني تصاعدي (من الأقدم إلى الأحدث)
+            allInvoices.sort((a, b) => a.saleDateObj - b.saleDateObj);
+
+            const totalAmount = allInvoices.reduce((s, i) => s + i.total_amount, 0);
+            const totalPaid = allInvoices.reduce((s, i) => s + i.totalPaid, 0);
+            const totalRemaining = allInvoices.reduce((s, i) => s + i.remaining, 0);
+            const selectedNames = allCustomers.filter(c => selectedIds.includes(c.id.toString())).map(c => c.name).join(' - ');
+
+            let rows = '';
+            for (let inv of allInvoices) {
+                const dateStr = inv.sale_date ? new Date(inv.sale_date).toLocaleString('ar-EG') : 'غير محدد';
+                const itemsHtml = inv.items.map(it => `${it.name} (${it.qty} × ₪${it.price.toFixed(2)})`).join('<br>');
+                // عرض اسم العميل (قد يكون موجوداً في inv.customer_name أو نأخذه من allCustomers)
+                let customerDisplayName = inv.customer_name;
+                if (!customerDisplayName) {
+                    const cust = allCustomers.find(c => c.id == inv.customer_id);
+                    customerDisplayName = cust ? cust.name : 'عميل';
+                }
+                rows += `
+                    <tr>
+                        <td>${inv.sale_id}</td>
+                        <td>${customerDisplayName}</td>
+                        <td>${dateStr}</td>
+                        <td class="items-cell">${itemsHtml || '—'}</td>
+                        <td>₪${inv.total_amount.toFixed(2)}</td>
+                        <td>₪${inv.totalPaid.toFixed(2)}</td>
+                        <td>₪${inv.remaining.toFixed(2)}</td>
+                    </tr>
+                `;
+            }
+
+            const html = `
+                <div class="summary-cards">
+                    <div class="sum-card"><h4>💰 إجمالي الفواتير</h4><div class="value">₪${totalAmount.toFixed(2)}</div></div>
+                    <div class="sum-card"><h4>💵 إجمالي المدفوع</h4><div class="value">₪${totalPaid.toFixed(2)}</div></div>
+                    <div class="sum-card"><h4>📉 إجمالي المتبقي</h4><div class="value">₪${totalRemaining.toFixed(2)}</div></div>
+                    <div class="sum-card"><h4>💰 إجمالي الرصيد الدائن</h4><div class="value">₪${totalCreditBalance.toFixed(2)}</div></div>
+                </div>
+                <h3>📄 الفواتير (مرتبة من الأقدم إلى الأحدث)</h3>
+                <p><strong>العملاء:</strong> ${selectedNames}</p>
+                <div class="table-wrapper" style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr><th>رقم الفاتورة</th><th>العميل</th><th>التاريخ والوقت</th><th>المنتجات</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            `;
+            reportContent.innerHTML = html;
+            reportArea.classList.add('show');
+            statusDiv.innerHTML = `✅ تم عرض ${allInvoices.length} فاتورة مرتبة زمنياً. إجمالي الرصيد الدائن: ${totalCreditBalance.toFixed(2)} ₪`;
+        } catch (err) {
+            console.error(err);
+            statusDiv.innerHTML = `❌ خطأ: ${err.message}`;
+            alert('حدث خطأ: ' + err.message);
+        }
+    }
+
+    document.getElementById('mergeBtn').addEventListener('click', generateMergedReport);
+    loadCustomers();
+</script>
+</body>
+</html>

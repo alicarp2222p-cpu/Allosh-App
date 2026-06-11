@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - نظام ALI للمبيعات</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        .bg-shape {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 50%;
+            bottom: -100px;
+            left: -100px;
+            z-index: 0;
+        }
+        .bg-shape2 {
+            top: -100px;
+            right: -100px;
+            bottom: auto;
+            left: auto;
+        }
+        .card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            padding: 40px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            z-index: 1;
+            transition: 0.3s;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        h1 {
+            color: #1e293b;
+            font-size: 28px;
+            margin-bottom: 8px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .sub {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 24px;
+            font-size: 16px;
+            transition: 0.2s;
+            background: white;
+            outline: none;
+        }
+        .input-group input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+        .input-group input.error {
+            border-color: #ef4444;
+        }
+        .input-group .error-msg {
+            font-size: 12px;
+            color: #ef4444;
+            margin-top: 5px;
+            padding-right: 12px;
+        }
+        .password-strength {
+            margin-top: 8px;
+            font-size: 12px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .strength-badge {
+            background: #f1f5f9;
+            padding: 4px 10px;
+            border-radius: 20px;
+            color: #475569;
+        }
+        .strength-badge.valid {
+            background: #22c55e20;
+            color: #16a34a;
+            border: 1px solid #22c55e;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 32px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(59,130,246,0.4);
+        }
+        .switch {
+            text-align: center;
+            margin-top: 24px;
+            color: #3b82f6;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .switch:hover {
+            text-decoration: underline;
+        }
+        .plans {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .plan {
+            flex: 1;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .plan.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        .plan h3 { font-size: 16px; margin-bottom: 4px; }
+        .plan p { font-size: 12px; color: #64748b; }
+        .loader {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid white;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e293b;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-size: 14px;
+            z-index: 1000;
+            animation: fadeInUp 0.3s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-shape"></div>
+<div class="bg-shape bg-shape2"></div>
+<div class="card">
+    <h1>📊 نظام ALI <span style="font-size: 24px;">للمبيعات</span></h1>
+    <div class="sub" id="formTitle">تسجيل الدخول إلى حسابك</div>
+
+    <div id="loginFields">
+        <div class="input-group">
+            <input type="email" id="email" placeholder="البريد الإلكتروني" autocomplete="email">
+        </div>
+        <div class="input-group">
+            <input type="password" id="password" placeholder="كلمة المرور">
+        </div>
+        <button id="loginBtn">دخول</button>
+    </div>
+
+    <div id="registerFields" style="display: none;">
+        <div class="input-group">
+            <input type="email" id="regEmail" placeholder="البريد الإلكتروني" autocomplete="off">
+        </div>
+        <div class="input-group">
+            <input type="password" id="regPassword" placeholder="كلمة المرور">
+            <div class="password-strength" id="strengthContainer"></div>
+        </div>
+        <div class="plans" id="planSelector">
+            <div class="plan" data-plan="monthly"><h3>شهري</h3><p>20$ / شهر</p></div>
+            <div class="plan" data-plan="6months"><h3>6 أشهر</h3><p>100$</p></div>
+            <div class="plan" data-plan="yearly"><h3>سنوي</h3><p>180$</p></div>
+        </div>
+        <button id="registerBtn">إنشاء حساب</button>
+    </div>
+
+    <div class="switch" id="switchMode">ليس لديك حساب؟ سجل الآن</div>
+</div>
+
+<script>
+    let isLogin = true;
+    let selectedPlan = 'monthly';
+
+    const switchMode = document.getElementById('switchMode');
+    const loginFields = document.getElementById('loginFields');
+    const registerFields = document.getElementById('registerFields');
+    const formTitle = document.getElementById('formTitle');
+    const strengthContainer = document.getElementById('strengthContainer');
+
+    // تحديد الخطة
+    document.querySelectorAll('.plan').forEach(plan => {
+        plan.addEventListener('click', () => {
+            document.querySelectorAll('.plan').forEach(p => p.classList.remove('selected'));
+            plan.classList.add('selected');
+            selectedPlan = plan.dataset.plan;
+        });
+    });
+
+    // التحقق من قوة كلمة المرور في الوقت الفعلي
+    const regPassword = document.getElementById('regPassword');
+    if (regPassword) {
+        regPassword.addEventListener('input', () => {
+            const pwd = regPassword.value;
+            const digits = (pwd.match(/\d/g) || []).length;
+            const lower = (pwd.match(/[a-z]/g) || []).length;
+            const hasUpper = /[A-Z]/.test(pwd);
+            strengthContainer.innerHTML = `
+                <div class="strength-badge ${digits >= 4 ? 'valid' : ''}">🔢 ${digits}/4 أرقام</div>
+                <div class="strength-badge ${lower >= 3 ? 'valid' : ''}">🔤 ${lower}/3 أحرف صغيرة</div>
+                <div class="strength-badge ${hasUpper ? 'valid' : ''}">🔠 حرف كبير واحد</div>
+            `;
+        });
+    }
+
+    function showToast(message, isError = false) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.style.background = isError ? '#ef4444' : '#22c55e';
+        toast.innerText = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    switchMode.addEventListener('click', () => {
+        isLogin = !isLogin;
+        if (isLogin) {
+            loginFields.style.display = 'block';
+            registerFields.style.display = 'none';
+            formTitle.innerText = 'تسجيل الدخول إلى حسابك';
+            switchMode.innerText = 'ليس لديك حساب؟ سجل الآن';
+        } else {
+            loginFields.style.display = 'none';
+            registerFields.style.display = 'block';
+            formTitle.innerText = 'إنشاء حساب جديد';
+            switchMode.innerText = 'لديك حساب؟ تسجيل الدخول';
+            if (regPassword) regPassword.dispatchEvent(new Event('input'));
+        }
+    });
+
+    // تسجيل الدخول
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        if (!email || !password) return showToast('الرجاء ملء جميع الحقول', true);
+        try {
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            localStorage.setItem('token', data.token);
+            showToast('تم تسجيل الدخول بنجاح، جاري التحويل...');
+            setTimeout(() => { window.location.href = '/customers.html'; }, 1000);
+        } catch (err) {
+            showToast(err.message, true);
+        }
+    });
+
+    // التسجيل
+    document.getElementById('registerBtn').addEventListener('click', async () => {
+        const email = document.getElementById('regEmail').value.trim();
+        const password = document.getElementById('regPassword').value;
+        if (!email || !password) return showToast('الرجاء ملء جميع الحقول', true);
+        const digits = (password.match(/\d/g) || []).length;
+        const lower = (password.match(/[a-z]/g) || []).length;
+        const hasUpper = /[A-Z]/.test(password);
+        if (digits < 4) return showToast('يجب أن تحتوي كلمة المرور على 4 أرقام على الأقل', true);
+        if (lower < 3) return showToast('يجب أن تحتوي كلمة المرور على 3 أحرف صغيرة على الأقل', true);
+        if (!hasUpper) return showToast('يجب أن تحتوي كلمة المرور على حرف كبير واحد على الأقل', true);
+
+        try {
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, subscription_type: selectedPlan })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            showToast('تم إنشاء الحساب! يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب.');
+            setTimeout(() => {
+                switchMode.click();
+                document.getElementById('email').value = email;
+                document.getElementById('password').value = '';
+            }, 1500);
+        } catch (err) {
+            showToast(err.message, true);
+        }
+    });
+</script>
+</body>
+</html>
